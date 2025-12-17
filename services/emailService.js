@@ -16,8 +16,8 @@ const transporter = nodemailer.createTransport({
     pass: process.env.SMTP_PASS,
   },
   tls: {
-    rejectUnauthorized: false,
-  },
+    rejectUnauthorized: false
+  }
 });
 
 /* ===========================
@@ -186,7 +186,7 @@ export const sendEmail = async (to, template) => {
 
   try {
     const info = await transporter.sendMail({
-      from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM_ADDRESS}>`,
+      from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.SMTP_USER}>`,
       to,
       subject: template.subject,
       html: template.html,
@@ -200,6 +200,7 @@ export const sendEmail = async (to, template) => {
 
     return { success: true, messageId: info.messageId };
   } catch (error) {
+    console.error('Error sending email:', error);
     return { success: false, error: error.message };
   }
 };

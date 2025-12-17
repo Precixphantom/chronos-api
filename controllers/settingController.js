@@ -3,9 +3,16 @@ import { sendEmail, emailTemplates } from '../services/emailService.js';
 import Task from '../models/Task.js';
 import Course from '../models/Course.js';
 import { equal } from 'assert';
-import { error } from 'console';
+import { error, timeStamp } from 'console';
 
-
+// check health 
+const healthCheck = async (req, res) => {
+    res.status(200).json({
+        status: "OK",
+        timeStamp: new Date().toISOString(),
+        message: "Server is running smoothly"
+    });
+}
 
 // delete account
 export const deleteaccount = async (req, res) => {
