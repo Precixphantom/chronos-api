@@ -1,8 +1,10 @@
 import express from 'express';
-import { deleteaccount, notification, notificationSettings } from '../controllers/settingController.js';
+import { healthCheck, deleteaccount, notification, notificationSettings } from '../controllers/settingController.js';
 import auth from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+router.get('/health', healthCheck);
 
 router.delete('/delete', auth, deleteaccount);
 
