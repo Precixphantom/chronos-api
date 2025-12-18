@@ -11,7 +11,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export const emailTemplates = {
   /* ---------- WELCOME ---------- */
   welcome: (userName) => ({
-    subject: '⏳ Welcome to Chronos — Take Control of Your Time',
+    subject: 'Welcome to Chronos — Take Control of Your Time',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -110,7 +110,7 @@ export const emailTemplates = {
 <body>
 <div class="container">
   <div class="header">
-    <h1 class="logo">⏳ Chronos</h1>
+    <h1 class="logo">Chronos</h1>
   </div>
   
   <div class="content">
@@ -157,7 +157,7 @@ export const emailTemplates = {
   <div class="footer">
     <p>© ${new Date().getFullYear()} Chronos. All rights reserved.</p>
     <p>
-      <a href="${process.env.FRONTEND_URL}/api/settings" class="footer-link">Settings</a>
+      <a href="${process.env.FRONTEND_URL}/settings" class="footer-link">Settings</a>
     </p>
   </div>
 </div>
@@ -185,7 +185,7 @@ Stay focused and keep moving forward 🚀
 
 ---
 © ${new Date().getFullYear()} Chronos
-Settings: ${process.env.FRONTEND_URL}/api/settings`,
+Settings: ${process.env.FRONTEND_URL}/settings`,
   }),
 
   /* ---------- WEEKLY SUMMARY ---------- */
@@ -299,7 +299,7 @@ weeklySummary: (userName, completedTasks, upcomingTasks, overdueTasks, stats) =>
   <div class="container">
     <div class="card">
       <div class="header">
-        <div class="logo">⏳ Chronos</div>
+        <div class="logo">Chronos</div>
       </div>
 
       <div class="title">Your Weekly Study Summary</div>
@@ -422,7 +422,7 @@ ${process.env.FRONTEND_URL}/dashboard
 /* ---------- TASK REMINDER ---------- */
 taskReminder: (userName, task, courseName) => {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-  const courseId = task?.course || ''; // 👈 courseId instead of taskId
+  const courseId = task?.course || ''; 
   const taskGoal = task?.goal || 'Unnamed Task';
   const taskDeadline = task?.deadline
     ? new Date(task.deadline).toLocaleString('en-US', {
@@ -582,7 +582,7 @@ export const sendEmail = async (to, template) => {
       headers: {
         'X-Priority': '3',
         'X-Mailer': 'Chrono',
-        'List-Unsubscribe': `<${process.env.FRONTEND_URL}/api/settings/notifications>`,
+        'List-Unsubscribe': `<${process.env.FRONTEND_URL}/settings/notifications>`,
       },
     });
     if (error) {
