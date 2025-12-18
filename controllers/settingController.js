@@ -2,8 +2,6 @@ import User from '../models/User.js';
 import { sendEmail, emailTemplates } from '../services/emailService.js';
 import Task from '../models/Task.js';
 import Course from '../models/Course.js';
-import { equal } from 'assert';
-import { error, timeStamp } from 'console';
 
 // check health 
 export const healthCheck = async (req, res) => {

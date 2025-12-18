@@ -11,10 +11,10 @@ const getNowLagos = () =>
   new Date(new Date().toLocaleString('en-US', { timeZone: 'Africa/Lagos' }));
 
 /* ============================
-   WEEKLY SUMMARY (SUNDAYS 6PM)
+   WEEKLY SUMMARY
    ============================ */
 cron.schedule(
-  '0 18 * * 0',
+  '0 17 * * 0',
   async () => {
     console.log('Sending weekly summaries...');
 
@@ -90,9 +90,6 @@ cron.schedule(
     } catch (err) {
       console.error('Error sending weekly summaries:', err);
     }
-  },
-  {
-    timezone: 'Africa/Lagos'
   }
 );
 
@@ -142,8 +139,5 @@ cron.schedule(
     } catch (err) {
       console.error(`Error sending task reminders: ${err.message}`);
     }
-  },
-  {
-    timezone: 'Africa/Lagos'
   }
 );
