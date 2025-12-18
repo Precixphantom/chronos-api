@@ -96,48 +96,40 @@ cron.schedule(
 /* ============================
    TASK REMINDERS (EVERY MINUTE)
    ============================ */
-cron.schedule(
-  '* * * * *',
-  async () => {
-    try {
-      const now = getNowLagos();
-      const fiveMinMark = new Date(now.getTime() + 5 * 60 * 1000);
-      const oneMinAfter = new Date(now.getTime() + 6 * 60 * 1000);
+import cron from 'node-cron';
 
-      const upcoming = await Task.find({
-        completed: false,
-        reminderSent: { $ne: true },
-        deadline: {
-          $gte: fiveMinMark,
-          $lt: oneMinAfter
-        }
-      }).populate('user course');
+cron.schedule('* * * * *', async () => {
+  try {
+    const now = getNowLagos();
+    const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
+    const windowStart = new Date(fiveMinutesFromNow.getTime() - 30 * 1000);
+    const windowEnd = new Date(fiveMinutesFromNow.getTime() + 30 * 1000);
 
-      for (const task of upcoming) {
-        const result = await sendTaskReminderEmail(
-          task.user._id,
-          task.user.email,
-          task.user.name,
-          task,
-          task.course?.courseTitle || 'course'
-        );
+    const upcomingTasks = await Task.find({
+      completed: false,
+      reminderSent: { $ne: true },
+      deadline: { $gte: windowStart, $lt: windowEnd }
+    }).populate('user course');
 
-        if (result.success) {
-          console.log(`Task reminder sent to: ${task.user.email}`);
-        } else {
-          console.log(
-            `Task reminder skipped for ${task.user.email}: ${
-              result.reason || result.error
-            }`
-          );
-        }
+    for (const task of upcomingTasks) {
+      const result = await sendTaskReminderEmail(
+        task.user._id,
+        task.user.email,
+        task.user.name,
+        task,
+        task.course?.courseTitle || 'course'
+      );
 
-        // Mark as sent to avoid duplicates
-        task.reminderSent = true;
-        await task.save();
+      if (result.success) {
+        console.log(`Task reminder sent to: ${task.user.email}`);
+      } else {
+        console.log(`Task reminder failed for ${task.user.email}: ${result.error}`);
       }
-    } catch (err) {
-      console.error(`Error sending task reminders: ${err.message}`);
+
+      task.reminderSent = true;
+      await task.save();
     }
+  } catch (err) {
+    console.error('Error sending task reminders:', err);
   }
-);
+});
