@@ -587,6 +587,7 @@ export const sendEmail = async (to, template) => {
     });
     if (error) {
       console.error('Error sending email', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       return { success: false, error: error.message };
     }
     

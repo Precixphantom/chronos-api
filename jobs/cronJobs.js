@@ -116,7 +116,7 @@ cron.schedule('* * * * *', async () => {
         task.user.email,
         task.user.name,
         task,
-        task.course?.courseTitle || 'course'
+        task.course?.courseTitle || 'Unnamed Course'
       );
 
       if (result.success) {
