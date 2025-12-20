@@ -6,47 +6,38 @@ import {
   sendTaskReminderEmail
 } from '../services/emailService.js';
 
-// Helper to get current Nigeria time
-const getNowLagos = () =>
-  new Date(new Date().toLocaleString('en-US', { timeZone: 'Africa/Lagos' }));
-
 /* ============================
    WEEKLY SUMMARY
    ============================ */
 cron.schedule(
   '0 17 * * 0',
   async () => {
-    console.log('Sending weekly summaries...');
+    console.log('Weekly summary cron triggered at:', new Date().toISOString());
 
     try {
       const users = await User.find();
-
-      const now = getNowLagos();
+      const now = new Date();
       const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const oneWeekAhead = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
       for (const user of users) {
-        // Tasks completed in the last 7 days
         const completedTasks = await Task.find({
           user: user._id,
           completed: true,
           updatedAt: { $gte: oneWeekAgo }
         }).populate('course');
 
-        // Tasks that were due in the last 7 days
         const tasksDueLastWeek = await Task.find({
           user: user._id,
           deadline: { $gte: oneWeekAgo, $lte: now }
         }).populate('course');
 
-        // Upcoming tasks in the next 7 days
         const upcomingTasks = await Task.find({
           user: user._id,
           completed: false,
           deadline: { $gte: now, $lte: oneWeekAhead }
         }).populate('course');
 
-        // Overdue tasks
         const overdueTasks = await Task.find({
           user: user._id,
           completed: false,
@@ -81,7 +72,7 @@ cron.schedule(
           console.log(`Weekly summary sent to: ${user.email}`);
         } else {
           console.log(
-            `Weekly summary skipped for ${user.email}: ${
+            ` Weekly summary skipped for ${user.email}: ${
               result.reason || result.error
             }`
           );
@@ -90,45 +81,73 @@ cron.schedule(
     } catch (err) {
       console.error('Error sending weekly summaries:', err);
     }
+  },
+  {
+    timezone: 'Africa/Lagos'
   }
 );
 
 /* ============================
    TASK REMINDERS (EVERY MINUTE)
+   Send reminder 5 minutes before deadline
    ============================ */
+cron.schedule(
+  '* * * * *',
+  async () => {
+    console.log('Task reminder check at:', new Date().toISOString());
 
-cron.schedule('* * * * *', async () => {
-  try {
-    const now = getNowLagos();
-    const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
-    const windowStart = new Date(fiveMinutesFromNow.getTime() - 30 * 1000);
-    const windowEnd = new Date(fiveMinutesFromNow.getTime() + 30 * 1000);
+    try {
+      const now = new Date();
+      
+      // Find tasks where deadline is between 4-6 minutes from now
+      const fourMinutesFromNow = new Date(now.getTime() + 4 * 60 * 1000);
+      const sixMinutesFromNow = new Date(now.getTime() + 6 * 60 * 1000);
 
-    const upcomingTasks = await Task.find({
-      completed: false,
-      reminderSent: { $ne: true },
-      deadline: { $gte: windowStart, $lt: windowEnd }
-    }).populate('user course');
+      const upcomingTasks = await Task.find({
+        completed: false,
+        reminderSent: { $ne: true },
+        deadline: { 
+          $gte: fourMinutesFromNow, 
+          $lte: sixMinutesFromNow 
+        }
+      }).populate('user course');
 
-    for (const task of upcomingTasks) {
-      const result = await sendTaskReminderEmail(
-        task.user._id,
-        task.user.email,
-        task.user.name,
-        task,
-        task.course?.courseTitle || 'Unnamed Course'
-      );
+      console.log(`Found ${upcomingTasks.length} tasks needing reminders`);
 
-      if (result.success) {
-        console.log(`Task reminder sent to: ${task.user.email}`);
-      } else {
-        console.log(`Task reminder failed for ${task.user.email}: ${result.error}`);
+      for (const task of upcomingTasks) {
+        // Calculate exact minutes until deadline
+        const minutesUntilDeadline = Math.round(
+          (new Date(task.deadline) - now) / (60 * 1000)
+        );
+        
+        console.log(`Task "${task.goal}" due in ${minutesUntilDeadline} minutes`);
+
+        const result = await sendTaskReminderEmail(
+          task.user._id,
+          task.user.email,
+          task.user.name,
+          task,
+          task.course?.courseTitle || 'Unnamed Course'
+        );
+
+        if (result.success) {
+          console.log(`Reminder sent to ${task.user.email} for "${task.goal}"`);
+          task.reminderSent = true;
+          await task.save();
+        } else {
+          console.log(`Reminder failed for ${task.user.email}: ${result.error || result.reason}`);
+        }
       }
-
-      task.reminderSent = true;
-      await task.save();
+    } catch (err) {
+      console.error('Error in task reminder cron:', err);
     }
-  } catch (err) {
-    console.error('Error sending task reminders:', err);
+  },
+  {
+    timezone: 'Africa/Lagos'
   }
-});
+);
+
+// Log when cron jobs are initialized
+console.log('Cron jobs initialized successfully');
+console.log('Weekly summary: Every Sunday at 5:00 PM Lagos time');
+console.log('Task reminders: Every minute (checks for tasks due in 4-6 minutes)');
