@@ -1038,7 +1038,7 @@ taskReminder: (userName, task, courseName) => {
 
       <div class="cta-container">
         <div class="cta-label">Access your course now</div>
-        <a href="${frontendUrl}/courses/${courseId}" class="cta-button">
+        <a href="${frontendUrl}/courses/${courseId._id}" class="cta-button">
           Open Course →
         </a>
       </div>
